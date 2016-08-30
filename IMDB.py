@@ -25,6 +25,8 @@ def XlsToDict(xls):
             })
     return lst
 
+# Проверочный комментарий
+
 
 def GetId(lst):
     bar = progressbar.ProgressBar(maxval=len(lst)).start()  # Создаём новый прогрессбар
