@@ -2,10 +2,13 @@ import xlrd
 import json
 import urllib.request
 import os
-import progressbar
-import time
-path = os.path.abspath(os.path.dirname(__file__)) + '\kpvotes.xlsx'
-FILMS = xlrd.open_workbook(path)
+from progressbar import ProgressBar, Percentage, AdaptiveETA, Bar, Counter, AdaptiveTransferSpeed, Timer
+from tkinter import filedialog, Tk
+from imdbpie import Imdb
+
+Tk().withdraw()
+filename = filedialog.askopenfile(filetypes=[('Excel files', '.xls .xlsx')])
+FILMSBOOK = xlrd.open_workbook(filename.name)
 URL = 'http://www.omdbapi.com/?'
 
 
@@ -25,11 +28,17 @@ def XlsToDict(xls):
             })
     return lst
 
-# Проверочный комментарий
-
 
 def GetId(lst):
-    bar = progressbar.ProgressBar(maxval=len(lst)).start()  # Создаём новый прогрессбар
+    bar = ProgressBar(max_value=len(lst), widgets=[       # Создём прогресбар, добавляем виджеты
+        Percentage(),                                     # проценты
+        Counter(format=' %(value)d из %(max_value)d '),   # счётчик
+        Bar(marker='#', left='[', right=']'),             # шкалу
+        Timer(format=' Прошло: %(elapsed)s '),            # сколько прошло
+        AdaptiveETA(format='Осталось: %(eta)s'),          # сколько осталось
+        AdaptiveTransferSpeed()                           # скорость передачи данных
+    ]).start()
+
     for i in range(len(lst)):
         bar.update(i)
         title = lst[i]['title'].replace(' ', '+')
@@ -45,23 +54,23 @@ def GetId(lst):
             lst[i]['id'] = dic['imdbID']
         else:
             continue
-    bar.finish()  # Заканчиваем обновлять -- далее можно
+    bar.finish()
 
 
 def printJ(file):
     print(json.dumps(file, indent=4, sort_keys=True))
 
-movielist = XlsToDict(FILMS)
+movielist = XlsToDict(FILMSBOOK)
 GetId(movielist)
 while True:
     print('Type nothing to exit')
     i = int(input(': '))
-    if i == -1:
+    if i == 0:
         break
     elif i == '':
         print('type some number')
     else:
-        printJ(movielist[i])
+        printJ(movielist[i - 1])
 
 
 # print(movielist)
