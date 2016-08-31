@@ -17,28 +17,33 @@ def XlsToDict(xls):
     Transfer data from Excel files to list of dictionaries
     """
     lst = list()
-    SHEET = xls.sheet_by_index(0)                   # получаем первый лист эксель файла
-    for i in range(2, SHEET.nrows):                 # от i = 2 до количества строк
-        if SHEET.cell(i, 1).value != '':            # если ячейка с названием пустая, не берем этот фильм
-            lst.append({                            # добавляем в конец листа данные о фильме
+    SHEET = xls.sheet_by_index(0)                           # получаем первый лист эксель файла
+    for i in range(2, SHEET.nrows):                         # от i = 2 до количества строк
+        if SHEET.cell(i, 1).value != '':                    # если ячейка с англ. названием пустая, не берем этот фильм
+            lst.append({                                    # добавляем в конец листа данные о фильме
                 'title': str(SHEET.cell(i, 1).value),
                 'year': str(SHEET.cell(i, 2).value)[:4],
                 'rate': SHEET.cell(i, 7).value,
                 'id': '',
             })
+    print('Файл успешно прочитан.')
     return lst
+
+# TODO
+# поменять поиск
 
 
 def GetId(lst):
+    print('Поиск фильмов в базе IMDB.')
     bar = ProgressBar(max_value=len(lst), widgets=[       # Создём прогресбар, добавляем виджеты
-        Percentage(),                                     # проценты
         Counter(format=' %(value)d из %(max_value)d '),   # счётчик
         Bar(marker='#', left='[', right=']'),             # шкалу
+        Percentage(),                                     # проценты
         Timer(format=' Прошло: %(elapsed)s '),            # сколько прошло
         AdaptiveETA(format='Осталось: %(eta)s'),          # сколько осталось
         AdaptiveTransferSpeed()                           # скорость передачи данных
     ]).start()
-
+    count = 0
     for i in range(len(lst)):
         bar.update(i)
         title = lst[i]['title'].replace(' ', '+')
@@ -52,9 +57,11 @@ def GetId(lst):
         dic = json.loads(data.read().decode(data.info().get_param('charset') or 'utf-8'))
         if dic['Response'] == 'True':
             lst[i]['id'] = dic['imdbID']
+            count += 1
         else:
             continue
     bar.finish()
+    print('Найдено {} из {}.'.format(count, len(lst)))
 
 
 def printJ(file):
@@ -62,6 +69,7 @@ def printJ(file):
 
 movielist = XlsToDict(FILMSBOOK)
 GetId(movielist)
+
 while True:
     print('Type nothing to exit')
     i = int(input(': '))
@@ -72,6 +80,4 @@ while True:
     else:
         printJ(movielist[i - 1])
 
-
-# print(movielist)
-# input('Press any button...')
+# input('Succeded\nPress any button...')
